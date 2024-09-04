@@ -43,8 +43,15 @@ double getDistance(int trig, int echo)
     delayMicroseconds(10);
     digitalWrite(trig, LOW);
 
-    // Wait for the ECHO pin to go HIGH
-    while (digitalRead(echo) == LOW);
+    // Wait 1sec for the ECHO pin to go HIGH
+    unsigned long startWait = millis();
+    while (digitalRead(echo) == LOW)
+    {
+        if (millis() - startWait > 1000) { // 1sec timeout
+            printf("ECHO 핀이 HIGH로 전환되지 않았습니다.\n");
+            return -1; // return error
+        }
+    }
 
     // Record the start time
     long startTime = micros();
