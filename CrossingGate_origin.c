@@ -6,9 +6,24 @@
 #include <wiringPiI2C.h>
 
 #define SERVO_PIN 18
-#define LED_PIN 27
+#define TRIG1 17
+#define ECHO1 27
+#define LED1  22
+#define TRIG2 5
+#define ECHO2 6
+#define LED2  13
+
 #define LIGHT_THRESHOLD 40 
 #define PCF8591_ADDR 0x48
+
+extern void initSensor(int trig, int echo, int led);
+extern double getDistance(int trig, int echo);
+extern void controlLED(int led, double distance, double threshold);
+
+extern double distance1;
+extern double distance2;
+extern int led1_vacancy;
+extern int led2_vacancy;
 
 const int PWM_0_DEGREE = 50;
 const int PWM_90_DEGREE = 150;
@@ -89,7 +104,9 @@ int main(void) {
         printf("False init wiringPi \n");
         return 1;
     }
-	 pinMode(LED_PIN, OUTPUT);
+    initSensor(TRIG1, ECHO1, LED1);
+    initSensor(TRIG2, ECHO2, LED2);
+    
     int fd = wiringPiI2CSetup(PCF8591_ADDR);
 
     if (fd == -1) {
@@ -107,7 +124,17 @@ int main(void) {
     int Crossgate = 0;
 
     while (1) {
-		
+		distance1 = getDistance(TRIG1, ECHO1);
+        distance2 = getDistance(TRIG2, ECHO2);
+
+        // Control LEDs based on the distances
+        controlLED(LED1, distance1, 10.0);
+        controlLED(LED2, distance2, 10.0);
+        printf("parking space : %d\n", led1_vacancy + led2_vacancy);
+        printf("distance1 : %.1f\n", distance1);
+        printf("distance2 : %.1f\n", distance2);
+        
+        
 		int adcValue = wiringPiI2CReadReg8(fd, PCF8591_ADDR | 0x40); 
         printf("ADC Value: %d\n", adcValue);
         

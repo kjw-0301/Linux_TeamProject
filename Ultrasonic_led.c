@@ -2,13 +2,13 @@
 #include <stdio.h>
 
 
-#define TRIG1 8
-#define ECHO1 9
-#define LED1  7
+#define TRIG1 2
+#define ECHO1 3
+#define LED1  4
 
-#define TRIG2 0
-#define ECHO2 2
-#define LED2  3
+#define TRIG2 17
+#define ECHO2 27
+#define LED2  22
 
 double distance1 = 0.0;
 double distance2 = 0.0;
@@ -28,7 +28,7 @@ void initSensor(int trig, int echo, int led)
 // Initializes the wiringPi library and sets up the ultrasonic sensors, and LED
 void setup()
 {
-    wiringPiSetup();
+    wiringPiSetupGpio();
 
     initSensor(TRIG1, ECHO1, LED1);
     initSensor(TRIG2, ECHO2, LED2);
@@ -48,7 +48,7 @@ double getDistance(int trig, int echo)
     while (digitalRead(echo) == LOW)
     {
         if (millis() - startWait > 1000) { // 1sec timeout
-            printf("ECHO ?€??HIGHë¡??„í™˜?˜ì? ?Šì•˜?µë‹ˆ??\n");
+            printf("ECHO pin has not changed to HIGH\n");
             return -1; // return error
         }
     }
@@ -83,24 +83,4 @@ void controlLED(int led, double distance, double threshold)
         if (led == LED1) led1_vacancy = 1;
         if (led == LED2) led2_vacancy = 1;
     }
-}
-
-int main(void)
-{
-    setup();
-
-    while (1)
-    {
-        distance1 = getDistance(TRIG1, ECHO1);
-        distance2 = getDistance(TRIG2, ECHO2);
-
-        // Control LEDs based on the distances
-        controlLED(LED1, distance1, 30.0);
-        controlLED(LED2, distance2, 30.0);
-        printf("parking space : %d\n", led1_vacancy + led2_vacancy);
-
-        delay(500);
-    }
-
-    return 0;
 }
