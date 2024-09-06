@@ -13,17 +13,29 @@
 #define ECHO2 6
 #define LED2  13
 
+#define SEG_A 0
+#define SEG_B 1
+#define SEG_C 19
+#define SEG_D 16
+#define SEG_E 26
+#define SEG_F 20
+#define SEG_G 21
+
+
 #define LIGHT_THRESHOLD 40 
 #define PCF8591_ADDR 0x48
 
 extern void initSensor(int trig, int echo, int led);
 extern double getDistance(int trig, int echo);
 extern void controlLED(int led, double distance, double threshold);
+extern void displayNumber(int number);
+extern void init7Segment();
 
 extern double distance1;
 extern double distance2;
 extern int led1_vacancy;
 extern int led2_vacancy;
+extern int vacancy_count;
 
 const int PWM_0_DEGREE = 50;
 const int PWM_90_DEGREE = 150;
@@ -106,6 +118,7 @@ int main(void) {
     }
     initSensor(TRIG1, ECHO1, LED1);
     initSensor(TRIG2, ECHO2, LED2);
+    init7Segment();
     
     int fd = wiringPiI2CSetup(PCF8591_ADDR);
 
@@ -122,17 +135,42 @@ int main(void) {
     char lastEntry[100] = "";
     char lastOut[100] = "";
     int Crossgate = 0;
-
+    
+    int FND_distance1 = 0;
+    int FND_distance2 = 0;
+    
     while (1) {
 		distance1 = getDistance(TRIG1, ECHO1);
         distance2 = getDistance(TRIG2, ECHO2);
-
+        
+        
+        if(distance1 > 10) 
+        {
+            FND_distance1 = 1; 
+        }
+        else if(distance1 < 10) 
+        {
+            FND_distance1 = 0; 
+        }
+        
+        if(distance2 > 10) 
+        {
+            FND_distance2 = 1; 
+        }
+        else if(distance2 < 10) 
+        {
+            FND_distance2 = 0; 
+        }
+        
         // Control LEDs based on the distances
         controlLED(LED1, distance1, 10.0);
         controlLED(LED2, distance2, 10.0);
+        
         printf("parking space : %d\n", led1_vacancy + led2_vacancy);
         printf("distance1 : %.1f\n", distance1);
         printf("distance2 : %.1f\n", distance2);
+        
+        displayNumber(FND_distance1 + FND_distance2);
         
         
 		int adcValue = wiringPiI2CReadReg8(fd, PCF8591_ADDR | 0x40); 
